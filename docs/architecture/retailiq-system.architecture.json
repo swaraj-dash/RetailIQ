@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "RetailIQ — Autonomous Retail Intelligence Architecture",
+    "subtitle": "Closed-loop shopper recovery, deterministic ATP row-locks, multi-echelon rebalancing, and Gemini AI restraint",
+    "output": "retailiq-system-architecture.html",
+    "quality_profile": "showcase",
+    "visual_preset": "signal-flow",
+    "animation": "trace",
+    "viewBox": [1200, 750]
+  },
+  "components": [
+    { "id": "shopper", "type": "external", "label": "Shopper", "sublabel": "Web / Mobile browser", "icon": "person", "pos": [40, 160], "size": [130, 64] },
+    { "id": "associate", "type": "external", "label": "Store Associate", "sublabel": "Pickup barcode scan", "icon": "briefcase", "pos": [40, 360], "size": [130, 64] },
+    { "id": "manager", "type": "external", "label": "Retail Manager", "sublabel": "Decision approval portal", "icon": "person", "pos": [40, 560], "size": [130, 64] },
+
+    { "id": "firebase_host", "type": "frontend", "label": "Firebase Hosting", "sublabel": "React 18 / Vite 5 SPA", "tag": "Static CDN Edge", "icon": "frontend", "pos": [240, 160], "size": [140, 64] },
+    { "id": "spa_client", "type": "frontend", "label": "RetailIQ Client", "sublabel": "Typed API Client & Views", "icon": "frontend", "pos": [240, 360], "size": [140, 64] },
+    { "id": "auth_guard", "type": "security", "label": "Auth & Tenancy", "sublabel": "Anonymous UID isolation", "tag": "Idempotent Keys", "icon": "security", "pos": [240, 560], "size": [140, 64] },
+
+    { "id": "cloud_run", "type": "backend", "label": "FastAPI Backend", "sublabel": "Cloud Run Container :8000", "tag": "Pydantic v2 Contracts", "icon": "backend", "pos": [450, 240], "size": [160, 70] },
+    { "id": "engine_planning", "type": "backend", "label": "Planning Engine", "sublabel": "14-Day Supply Simulator", "tag": "Deterministic Rebalance", "icon": "decision", "pos": [450, 420], "size": [160, 70] },
+    { "id": "engine_restraint", "type": "backend", "label": "Demand & AEO Engine", "sublabel": "Capped Signal / C01-C08", "tag": "Fad Dampener (Qty: 0)", "icon": "decision", "pos": [450, 580], "size": [160, 70] },
+
+    { "id": "gemini_gateway", "type": "cloud", "label": "Gemini AI Gateway", "sublabel": "Gemini 2.5 Flash / ADC", "tag": "5 Grounded Ops + Fallback", "icon": "cloud", "pos": [690, 120], "size": [160, 70] },
+    { "id": "atp_service", "type": "backend", "label": "ATP & Hold Service", "sublabel": "15-Min TTL Row Locks", "tag": "Zero Ghost Stock", "icon": "clock", "pos": [690, 280], "size": [160, 70] },
+    { "id": "trace_service", "type": "security", "label": "Cryptographic Trace", "sublabel": "Audit Event Stream", "tag": "SHA-256 State Hashes", "icon": "security", "pos": [690, 460], "size": [160, 70] },
+    { "id": "forecast_runner", "type": "backend", "label": "Forecasting Runner", "sublabel": "MA28 Baseline / SNAIVE7", "tag": "WAPE / MAE Evaluation", "icon": "backend", "pos": [690, 610], "size": [160, 70] },
+
+    { "id": "postgres_db", "type": "database", "label": "PostgreSQL 17", "sublabel": "Cloud SQL System of Record", "tag": "32 Relational Tables", "icon": "database", "pos": [930, 260], "size": [160, 80] },
+    { "id": "inv_balances", "type": "database", "label": "Inventory Ledgers", "sublabel": "Physical on-hand & holds", "tag": "Row-level atomicity", "icon": "database", "pos": [930, 420], "size": [160, 70] },
+    { "id": "audit_store", "type": "database", "label": "Immutable Audit Log", "sublabel": "Tamper-evident mutations", "tag": "Full traceability", "icon": "database", "pos": [930, 580], "size": [160, 70] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Client Tier (Retail Omnichannel Actors)", "wraps": ["shopper", "associate", "manager"] },
+    { "kind": "security-group", "label": "Presentation & Edge Tier", "wraps": ["firebase_host", "spa_client", "auth_guard"] },
+    { "kind": "security-group", "label": "Google Cloud Run Backend Core", "wraps": ["cloud_run", "engine_planning", "engine_restraint", "atp_service", "trace_service", "forecast_runner"] },
+    { "kind": "region", "label": "Google Cloud AI (Vertex AI Enterprise)", "wraps": ["gemini_gateway"] },
+    { "kind": "region", "label": "Authoritative System of Record (Cloud SQL)", "wraps": ["postgres_db", "inv_balances", "audit_store"] }
+  ],
+  "connections": [
+    { "id": "c1", "from": "shopper", "to": "firebase_host", "label": "HTTPS browse", "variant": "emphasis" },
+    { "id": "c2", "from": "associate", "to": "spa_client", "label": "Scan pickup" },
+    { "id": "c3", "from": "manager", "to": "auth_guard", "label": "Approve action", "variant": "security" },
+    { "id": "c4", "from": "firebase_host", "to": "spa_client", "label": "Serve SPA" },
+    { "id": "c5", "from": "spa_client", "to": "cloud_run", "label": "REST API :8000", "variant": "emphasis" },
+    { "id": "c6", "from": "auth_guard", "to": "cloud_run", "label": "Bearer UID / Idempotency" },
+    { "id": "c7", "from": "cloud_run", "to": "gemini_gateway", "label": "Intent & Spec parse", "variant": "emphasis", "fromSide": "top", "toSide": "left" },
+    { "id": "c8", "from": "cloud_run", "to": "atp_service", "label": "Hold & Quote" },
+    { "id": "c9", "from": "atp_service", "to": "inv_balances", "label": "SELECT ... FOR UPDATE", "variant": "security" },
+    { "id": "c10", "from": "cloud_run", "to": "engine_planning", "label": "Trigger plan" },
+    { "id": "c11", "from": "engine_planning", "to": "forecast_runner", "label": "MA28 demand baseline" },
+    { "id": "c12", "from": "engine_planning", "to": "inv_balances", "label": "Multi-store ATP balances" },
+    { "id": "c13", "from": "engine_restraint", "to": "gemini_gateway", "label": "Classify signals", "fromSide": "right", "toSide": "bottom" },
+    { "id": "c14", "from": "cloud_run", "to": "trace_service", "label": "Record mutation" },
+    { "id": "c15", "from": "trace_service", "to": "audit_store", "label": "SHA-256 hash log", "variant": "security" },
+    { "id": "c16", "from": "atp_service", "to": "postgres_db", "label": "Atomic Order Commit", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Shopper Intent & Grounding",
+      "items": [
+        "Gemini 2.5 Flash parses unstructured conversational intent into hard factual filters",
+        "Preferred SKU out of stock -> Deterministically surfaces in-stock substitute (VoltGo Go)",
+        "15-minute reservation hold backed by database row locks and countdown timer"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Deterministic Inventory Ledger",
+      "items": [
+        "ATP computed strictly from physical ledger: on_hand - holds - allocated - transfers",
+        "Store associate pickup fulfillment atomically decrements on-hand inventory (12 -> 11)",
+        "Zero model-generated balances; AI is strictly restricted to read-only advisory"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Multi-Echelon Decision Engine",
+      "items": [
+        "Impending S1 stockout triggers automated trade-off: Transfer from S2 vs Supplier PO",
+        "Inter-store transfer recovers +₹15,074 margin with ₹0 working capital vs ₹25,380 PO",
+        "Mandatory human approval gate before physical transfer or purchase order creation"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "AI Restraint & Governance",
+      "items": [
+        "High-intent search spike (Solar Lantern) triggers safe +25% PO replenishment",
+        "Viral social media fad (Glow Clip) dampened to MONITOR ONLY with 0 units ordered",
+        "Catalog audit rules C01-C08 propose spec patches and export Schema.org JSON-LD"
+      ]
+    }
+  ]
+}

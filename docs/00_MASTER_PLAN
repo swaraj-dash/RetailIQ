@@ -1,0 +1,98 @@
+# RetailIQ — authoritative build plan
+
+Specification version: 1.0 • Prepared: 17 October 2026 • Stage: specification only.
+
+## Product decision
+
+RetailIQ connects shopping needs, verified product facts, available stock, fulfillment choices, demand signals and approved operational actions. Its central demonstration is **a customer need becoming an evidence-backed business decision, with the subsequent outcome traceable to the original need**.
+
+Keep RetailIQ as the platform name. Use “Recover the purchase. Learn what to stock next.” as the demo narrative. UNLOST describes the purchase-recovery journey; it is not a second application or a replacement brand. Strategic alternatives and competition facts are in [01_COMPETITION_AND_PRODUCT_STRATEGY.md](01_COMPETITION_AND_PRODUCT_STRATEGY.md).
+
+## Fixed decisions
+
+| Layer | Decision |
+|---|---|
+| Frontend | One React/TypeScript/Vite SPA; Tailwind; one shadcn/Radix design system; Lucide; Recharts |
+| Backend | Python 3.12, FastAPI, Pydantic v2; synchronous SQLAlchemy 2 and psycopg 3; Alembic |
+| Database | PostgreSQL 17 locally and Cloud SQL PostgreSQL 17 in deployment |
+| AI | Google GenAI SDK; Gemini `gemini-3.5-flash`; Google Cloud model API, called through one application adapter |
+| Google naming | Current documentation calls the former Vertex AI model platform Gemini Enterprise Agent Platform. Use the documented SDK `enterprise=True` interface, not the retired `vertexai.generative_models` module. See [14_SOURCES_AND_DEPENDENCIES.md](14_SOURCES_AND_DEPENDENCIES.md). |
+| Hosting | Firebase Hosting for static assets; one Cloud Run FastAPI service; Artifact Registry container |
+| Location | Cloud Run/Cloud SQL/Artifact Registry in `asia-south1`; model endpoint `global` for documented standard pay-as-you-go access. This is an India-only processing promise. |
+| Identity | Firebase Authentication anonymous sign-in for public synthetic demo; server verifies ID tokens; each UID owns one isolated demo workspace |
+| Computation | Deterministic forecast, stock, fulfillment and finance services; Gemini interprets language and proposes grounded explanations |
+| Execution | No agent framework, vector database, microservices, Firebase database, Redis, Pub/Sub or Kubernetes in MVP |
+| Actions | Explicit user approval; simulated orders, transfers and purchase orders only; no payments, supplier or courier integration |
+
+Dependency pins and permitted compatibility repairs are centralized in [14_SOURCES_AND_DEPENDENCIES.md](14_SOURCES_AND_DEPENDENCIES.md). The smaller coding agent must not choose another stack.
+
+## Scope and release tiers
+
+The full vision includes all retail channels: storefront, associate, stores, DC, suppliers, incoming POs, transfers, allocation, picking, shipping, returns, promotions, seasonal signals, discoverability and business outcomes. A small dataset and simplified operational states keep these connected.
+
+| Capability | First vertical slice | Complete demo MVP | Later production work |
+|---|---|---|---|
+| Needs and grounded discovery | Need extraction, deterministic filtered products | Comparisons, explanations, follow-up questions | Persistent consent-based personalization |
+| Inventory and fulfillment | Network ATP; single-SKU hold and order | Pickup, shipping states, substitutes, stale-quote rejection | Multi-line/split carts; real promises and carriers |
+| Associate workspace | Network stock search | Reservation, dispatch, receive and inspected return | POS, barcode and WMS integration |
+| Inventory planning | One reproducible SKU/store calculation | Every SKU/store; 7/14/28-day forecasts, backtests, excess and transfers | Advanced intermittent-demand models and calibrated intervals |
+| Trend-to-stock | Internal demand trace | Bounded synthetic external signals, act/monitor/reject decisions | Authorized live sources and causal experiments |
+| Catalog/AEO | Product facts remain authoritative | Deterministic audit, grounded patch review and JSON-LD preview | Real merchant feeds, indexed public product pages, authorized performance data |
+| Outcomes | Link need → order → proposal | Expected versus observed simulation outcomes | Measured retailer experiments and profitability validation |
+
+Non-goals: real purchases, payment processing, real delivery commitments, full WMS, scraping private conversations, cross-platform AI visibility claims, guaranteed search ranking, autonomous procurement, production multi-retailer onboarding, automatic retraining or fine-tuning.
+
+## User and authorization model
+
+One synthetic retailer is represented in each workspace. Anonymous Firebase users receive `DEMO_MANAGER` only in their own `is_demo=true` workspace and only while `DEMO_MODE=true`. The UI can switch among Shopper, Associate and Business views; switching views does not change identity or grant access to another workspace. Every business button says “Simulate …” or “Approve demo …”.
+
+The app must fail closed if `DEMO_MODE=false`: public workspace creation is disabled. Production `CUSTOMER`, `ASSOCIATE`, `MANAGER` roles exist in the schema, but provisioning real retail tenants is outside MVP. No client-submitted role or workspace ID is trusted.
+
+## Completion gates
+
+1. Environment inspection, dependency resolution, model access and billing gates recorded.
+2. PostgreSQL migrations run on a clean DB; deterministic dataset seeds and verifies.
+3. First complete customer-to-business flow passes a browser test.
+4. All ten scenarios in [13_SYNTHETIC_DATASET.md](13_SYNTHETIC_DATASET.md) pass; inventory, money and authorization tests pass.
+5. Live Gemini requests and deterministic fallback are each tested and visibly distinguishable.
+6. Firebase public URL and Cloud Run URL are recorded and checked from a clean browser; Cloud SQL data persists across backend restart.
+7. Required competition materials and team eligibility are verified by the team. Screenshots, repository and video show the same deployed revision.
+
+Only items 1–7 together constitute a submitted, complete MVP. This package does not claim any application, cloud deployment, test execution or submission already exists. Specification validation is recorded separately in [15_VALIDATION_REPORT.md](15_VALIDATION_REPORT.md).
+
+## Deadline judgment
+
+The public deadline is very close; the actual submission clock is not published in the retrieved page. Budget the first 2 hours of implementation for access and an early cloud health deployment, then the vertical slice. The complete scope is approximately 6–10 experienced engineer-days, an engineering estimate rather than a delivery promise. A 16–24-hour accelerated team effort may deliver the deadline slice, but must honestly list any missing MVP scenarios. Do not manufacture screenshots or claim simulated evidence is measured impact. If entry is blocked, continue as an independent project.
+
+## Authority and precedence
+
+Security/platform constraints and explicit user decisions outrank this package. Verified competition rules control eligibility/submission only. This master plan controls scope and stack; [03_DATABASE_AND_DATA_MODEL.md](03_DATABASE_AND_DATA_MODEL.md) controls persistence, [04_API_AND_INTEGRATION_CONTRACTS.md](04_API_AND_INTEGRATION_CONTRACTS.md) controls interfaces, [06_FORECASTING_AND_DECISION_ENGINE.md](06_FORECASTING_AND_DECISION_ENGINE.md) controls mathematics, and [13_SYNTHETIC_DATASET.md](13_SYNTHETIC_DATASET.md) controls demo inputs. Examples never override those contracts. On conflict: stop the affected task, record the discrepancy in `DECISIONS.md`, update all affected contracts and tests together, then continue unrelated work. No silent architecture changes.
+
+## Reading map and complete manifest
+
+| File | Purpose |
+|---|---|
+| [README.md](README.md) | Entry point and future build commands |
+| [AGENTS.md](AGENTS.md) | Coding-agent operating instructions |
+| [00_MASTER_PLAN.md](00_MASTER_PLAN.md) | Scope, authority and definition of done |
+| [01_COMPETITION_AND_PRODUCT_STRATEGY.md](01_COMPETITION_AND_PRODUCT_STRATEGY.md) | Official facts and product positioning |
+| [02_SYSTEM_ARCHITECTURE.md](02_SYSTEM_ARCHITECTURE.md) | Components, trust boundaries and failure handling |
+| [03_DATABASE_AND_DATA_MODEL.md](03_DATABASE_AND_DATA_MODEL.md) | Tables, constraints and state transitions |
+| [04_API_AND_INTEGRATION_CONTRACTS.md](04_API_AND_INTEGRATION_CONTRACTS.md) | Typed HTTP and AI-tool contracts |
+| [05_AI_AND_AGENT_DESIGN.md](05_AI_AND_AGENT_DESIGN.md) | Gemini orchestration, grounding and evaluation |
+| [06_FORECASTING_AND_DECISION_ENGINE.md](06_FORECASTING_AND_DECISION_ENGINE.md) | Reproducible planning and financial logic |
+| [07_UI_UX_DESIGN_SYSTEM.md](07_UI_UX_DESIGN_SYSTEM.md) | Screens, states and responsive behavior |
+| [08_TESTING_AND_ACCEPTANCE.md](08_TESTING_AND_ACCEPTANCE.md) | Test cases, commands and acceptance gates |
+| [09_GOOGLE_CLOUD_DEPLOYMENT.md](09_GOOGLE_CLOUD_DEPLOYMENT.md) | Provisioning, rollout and troubleshooting |
+| [10_AGENT_TOOLING_AND_SKILLS.md](10_AGENT_TOOLING_AND_SKILLS.md) | Verified tools and local compatibility checks |
+| [11_IMPLEMENTATION_ROADMAP.md](11_IMPLEMENTATION_ROADMAP.md) | Dependency-ordered milestones |
+| [12_DEMO_AND_SUBMISSION.md](12_DEMO_AND_SUBMISSION.md) | Exact demo and submission checklist |
+| [13_SYNTHETIC_DATASET.md](13_SYNTHETIC_DATASET.md) | Deterministic catalog, history and scenarios |
+| [14_SOURCES_AND_DEPENDENCIES.md](14_SOURCES_AND_DEPENDENCIES.md) | Evidence, versions and dependency lock policy |
+| [15_VALIDATION_REPORT.md](15_VALIDATION_REPORT.md) | Specification checks and unresolved gates |
+| [TASKS.md](TASKS.md) | Individually verifiable implementation tasks |
+| [DECISIONS.md](DECISIONS.md) | Decision log and exception handling |
+
+## Screenshot transcription notes
+
+This reconstruction is based on the five screenshots supplied for `00_MASTER_PLAN.md`. Some portions of the original editor view are cropped, obscured, or too small to read precisely. The visible content has been transcribed and lightly formatted as Markdown; verify the fixed dependency/model naming and any exact wording against the original file where exact fidelity matters.

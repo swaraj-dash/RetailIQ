@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow 1: Grounded Shopper Intent, Substitute Matching & Row Locks",
+    "subtitle": "Natural language intent extraction, deterministic ATP row-locking, and zero-hallucination substitute purchase conversion",
+    "output": "retailiq-shopper-recovery-workflow.html",
+    "quality_profile": "showcase",
+    "visual_preset": "signal-flow",
+    "animation": "trace"
+  },
+  "lanes": [
+    { "id": "shopper_ui", "label": "Shopper Touchpoint (React SPA)" },
+    { "id": "gemini_engine", "label": "Gemini AI Gateway (Vertex AI)" },
+    { "id": "ledger_core", "label": "Authoritative Ledger (PostgreSQL)" }
+  ],
+  "mainPath": [
+    "nl_query",
+    "spec_extract",
+    "stock_eval",
+    "substitute_match",
+    "reserve_hold",
+    "order_placed"
+  ],
+  "nodes": [
+    {
+      "id": "nl_query",
+      "lane": "shopper_ui",
+      "col": 0,
+      "type": "external",
+      "label": "Shopper Search Prompt",
+      "sublabel": "10,000 mAh USB-C under ₹1,500 pickup today",
+      "tag": "Unstructured Input",
+      "icon": "person"
+    },
+    {
+      "id": "spec_extract",
+      "lane": "gemini_engine",
+      "col": 1,
+      "type": "cloud",
+      "label": "Extract Structured Criteria",
+      "sublabel": "Capacity >= 10k, USB-C, price <= ₹1,500",
+      "tag": "Pydantic Validated",
+      "icon": "decision"
+    },
+    {
+      "id": "stock_eval",
+      "lane": "ledger_core",
+      "col": 2,
+      "type": "database",
+      "label": "Evaluate Physical ATP",
+      "sublabel": "VoltGo Pro (RQ001): 0 ATP at S1",
+      "tag": "Stockout Detected",
+      "icon": "database"
+    },
+    {
+      "id": "substitute_match",
+      "lane": "gemini_engine",
+      "col": 3,
+      "type": "backend",
+      "label": "Deterministic Substitution",
+      "sublabel": "VoltGo Go (RQ002): 12 ATP at S1, ₹1,299",
+      "tag": "Verified Spec Parity",
+      "icon": "active"
+    },
+    {
+      "id": "reserve_hold",
+      "lane": "ledger_core",
+      "col": 4,
+      "type": "backend",
+      "label": "15-Minute Reservation Hold",
+      "sublabel": "SELECT ... FOR UPDATE row lock",
+      "tag": "Active Countdown",
+      "icon": "clock"
+    },
+    {
+      "id": "order_placed",
+      "lane": "shopper_ui",
+      "col": 5,
+      "type": "security",
+      "label": "Demo Order Confirmed",
+      "sublabel": "ORD-20261017-001 ready for store pickup",
+      "tag": "Sale Recovered",
+      "icon": "success"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "nl_query", "to": "spec_extract", "label": "POST /shopping/intent" },
+    { "id": "e2", "from": "spec_extract", "to": "stock_eval", "label": "Query balances" },
+    { "id": "e3", "from": "stock_eval", "to": "substitute_match", "label": "Surpass stockout" },
+    { "id": "e4", "from": "substitute_match", "to": "reserve_hold", "label": "POST /shopping/quote (HOLD)" },
+    { "id": "e5", "from": "reserve_hold", "to": "order_placed", "label": "POST /shopping/orders" }
+  ]
+}

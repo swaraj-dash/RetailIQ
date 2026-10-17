@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow 2: Store Associate Pickup & Atomic Stock Decrement",
+    "subtitle": "Order verification, physical unit scanning, atomic on-hand ledger decrement (12 -> 11), and cryptographic audit logging",
+    "output": "retailiq-associate-fulfillment-workflow.html",
+    "quality_profile": "showcase",
+    "visual_preset": "signal-flow",
+    "animation": "trace"
+  },
+  "lanes": [
+    { "id": "customer_actor", "label": "Customer at Store S1" },
+    { "id": "associate_portal", "label": "Store Associate Terminal" },
+    { "id": "ledger_lock", "label": "Transactional Inventory Engine" }
+  ],
+  "mainPath": [
+    "customer_arrival",
+    "order_lookup",
+    "barcode_scan",
+    "handover_exec",
+    "stock_decrement",
+    "audit_event_logged"
+  ],
+  "nodes": [
+    {
+      "id": "customer_arrival",
+      "lane": "customer_actor",
+      "col": 0,
+      "type": "external",
+      "label": "Customer Arrives for Pickup",
+      "sublabel": "Indiranagar Store S1 counter",
+      "tag": "Presents Order ID",
+      "icon": "person"
+    },
+    {
+      "id": "order_lookup",
+      "lane": "associate_portal",
+      "col": 1,
+      "type": "frontend",
+      "label": "Lookup Pickup Queue",
+      "sublabel": "Verify hold token & customer details",
+      "tag": "Status: RESERVED",
+      "icon": "briefcase"
+    },
+    {
+      "id": "barcode_scan",
+      "lane": "associate_portal",
+      "col": 2,
+      "type": "security",
+      "label": "Scan Physical Unit",
+      "sublabel": "Confirm VoltGo Go (RQ002) SKU",
+      "tag": "Zero Discrepancy",
+      "icon": "active"
+    },
+    {
+      "id": "handover_exec",
+      "lane": "ledger_lock",
+      "col": 3,
+      "type": "backend",
+      "label": "Execute Pickup Handover",
+      "sublabel": "Release reservation hold lock",
+      "tag": "Row Lock Acquired",
+      "icon": "decision"
+    },
+    {
+      "id": "stock_decrement",
+      "lane": "ledger_lock",
+      "col": 4,
+      "type": "database",
+      "label": "Atomic Stock Decrement",
+      "sublabel": "Physical on-hand: 12 -> 11 units",
+      "tag": "Zero Ghost Stock",
+      "icon": "database"
+    },
+    {
+      "id": "audit_event_logged",
+      "lane": "customer_actor",
+      "col": 5,
+      "type": "security",
+      "label": "Receipt & Audit Ledger Written",
+      "sublabel": "Customer receives receipt, state logged",
+      "tag": "Status: COMPLETED",
+      "icon": "success"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "customer_arrival", "to": "order_lookup", "label": "Show order token" },
+    { "id": "e2", "from": "order_lookup", "to": "barcode_scan", "label": "Pick shelf unit" },
+    { "id": "e3", "from": "barcode_scan", "to": "handover_exec", "label": "POST /orders/{id}/fulfill" },
+    { "id": "e4", "from": "handover_exec", "to": "stock_decrement", "label": "UPDATE balances ... SET on_hand = 11" },
+    { "id": "e5", "from": "stock_decrement", "to": "audit_event_logged", "label": "Insert audit_event (SHA-256)" }
+  ]
+}

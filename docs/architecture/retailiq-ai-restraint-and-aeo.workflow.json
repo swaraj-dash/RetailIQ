@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow 4: AI Restraint on Trends & Catalog AEO Governance",
+    "subtitle": "External signal classification, social fad dampening to monitor-only, C01-C08 catalog audit rules, and Schema.org JSON-LD generation",
+    "output": "retailiq-ai-restraint-and-aeo-workflow.html",
+    "quality_profile": "showcase",
+    "visual_preset": "signal-flow",
+    "animation": "trace"
+  },
+  "lanes": [
+    { "id": "external_signal", "label": "External Demand Signals" },
+    { "id": "classification", "label": "AI Restraint Classifier" },
+    { "id": "catalog_aeo", "label": "Catalog & AEO Governance" }
+  ],
+  "mainPath": [
+    "signal_feed",
+    "classify_intent",
+    "restraint_policy",
+    "audit_checks",
+    "propose_patch",
+    "publish_jsonld"
+  ],
+  "nodes": [
+    {
+      "id": "signal_feed",
+      "lane": "external_signal",
+      "col": 0,
+      "type": "external",
+      "label": "Ingest External Signals",
+      "sublabel": "Search spike & viral fad",
+      "tag": "EXT01 & EXT02",
+      "icon": "cloud"
+    },
+    {
+      "id": "classify_intent",
+      "lane": "classification",
+      "col": 1,
+      "type": "cloud",
+      "label": "Classify Signal Intent",
+      "sublabel": "Solar lantern vs Clip fad",
+      "tag": "Utility vs Hype",
+      "icon": "decision"
+    },
+    {
+      "id": "restraint_policy",
+      "lane": "classification",
+      "col": 2,
+      "type": "backend",
+      "label": "Apply AI Restraint",
+      "sublabel": "Lantern PO 18; Clip Qty 0",
+      "tag": "MONITOR ONLY",
+      "icon": "active"
+    },
+    {
+      "id": "audit_checks",
+      "lane": "catalog_aeo",
+      "col": 3,
+      "type": "database",
+      "label": "Deterministic Audit C01-C08",
+      "sublabel": "Missing lumens detected",
+      "tag": "Score 78/100",
+      "icon": "database"
+    },
+    {
+      "id": "propose_patch",
+      "lane": "catalog_aeo",
+      "col": 4,
+      "type": "cloud",
+      "label": "Grounded Patch Proposed",
+      "sublabel": "Structured spec diff",
+      "tag": "Manager Review",
+      "icon": "decision"
+    },
+    {
+      "id": "publish_jsonld",
+      "lane": "catalog_aeo",
+      "col": 5,
+      "type": "security",
+      "label": "Schema.org JSON-LD Live",
+      "sublabel": "Score elevated to 94/100",
+      "tag": "AEO Optimized",
+      "icon": "success"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "signal_feed", "to": "classify_intent", "label": "Gemini classify_signal" },
+    { "id": "e2", "from": "classify_intent", "to": "restraint_policy", "label": "Cap uplift +25% max" },
+    { "id": "e3", "from": "restraint_policy", "to": "audit_checks", "label": "Verify catalog facts" },
+    { "id": "e4", "from": "audit_checks", "to": "propose_patch", "label": "propose_catalog_patch" },
+    { "id": "e5", "from": "propose_patch", "to": "publish_jsonld", "label": "Approve patch & export JSON-LD" }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow 3: Multi-Echelon Replenishment & Explainable Rebalancing",
+    "subtitle": "14-day supply simulation, automated transfer vs supplier purchase order trade-off, human approval gate, and in-transit stock conservation",
+    "output": "retailiq-replenishment-decision-workflow.html",
+    "quality_profile": "showcase",
+    "visual_preset": "signal-flow",
+    "animation": "trace"
+  },
+  "lanes": [
+    { "id": "detector", "label": "14-Day Supply Simulator" },
+    { "id": "optimizer", "label": "Deterministic Decision Engine" },
+    { "id": "governance", "label": "Human Approval & Dispatch" }
+  ],
+  "mainPath": [
+    "stockout_detected",
+    "network_scan",
+    "tradeoff_calc",
+    "recommend_surfaced",
+    "human_approval",
+    "transfer_dispatched"
+  ],
+  "nodes": [
+    {
+      "id": "stockout_detected",
+      "lane": "detector",
+      "col": 0,
+      "type": "backend",
+      "label": "Stockout Projected at S1",
+      "sublabel": "Day 2 hits zero stock",
+      "tag": "₹25,380 Risk",
+      "icon": "decision"
+    },
+    {
+      "id": "network_scan",
+      "lane": "detector",
+      "col": 1,
+      "type": "database",
+      "label": "Scan Network Inventory",
+      "sublabel": "S2 holds 32 excess units",
+      "tag": "Carrying Drag",
+      "icon": "database"
+    },
+    {
+      "id": "tradeoff_calc",
+      "lane": "optimizer",
+      "col": 2,
+      "type": "backend",
+      "label": "Evaluate Trade-offs",
+      "sublabel": "1-day lead vs 5-day PO",
+      "tag": "Deterministic",
+      "icon": "active"
+    },
+    {
+      "id": "recommend_surfaced",
+      "lane": "optimizer",
+      "col": 3,
+      "type": "frontend",
+      "label": "Surface Recommendation",
+      "sublabel": "Transfer 16: +₹15,074",
+      "tag": "₹0 Bound Capital",
+      "icon": "decision"
+    },
+    {
+      "id": "human_approval",
+      "lane": "governance",
+      "col": 4,
+      "type": "security",
+      "label": "Manager Approval Gate",
+      "sublabel": "Review logistics parity",
+      "tag": "Human Gate",
+      "icon": "person"
+    },
+    {
+      "id": "transfer_dispatched",
+      "lane": "governance",
+      "col": 5,
+      "type": "database",
+      "label": "Atomic Transfer Created",
+      "sublabel": "S2 dispatch -> S1 receive",
+      "tag": "DISPATCHED",
+      "icon": "success"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "stockout_detected", "to": "network_scan", "label": "Query store balances" },
+    { "id": "e2", "from": "network_scan", "to": "tradeoff_calc", "label": "Compute transfer vs PO" },
+    { "id": "e3", "from": "tradeoff_calc", "to": "recommend_surfaced", "label": "Generate recommendation" },
+    { "id": "e4", "from": "recommend_surfaced", "to": "human_approval", "label": "POST /planning/recommendations/{id}/approve" },
+    { "id": "e5", "from": "human_approval", "to": "transfer_dispatched", "label": "Atomic transfer record commit" }
+  ]
+}
